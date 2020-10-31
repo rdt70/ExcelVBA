@@ -1,0 +1,68 @@
+
+'*************************************************
+'^^^^^^^ Add a new record to sharepoint list
+'*************************************************
+Function AddToSharepoint(colTitle As String, colVal As String, Optional ByRef rowDictionary As Object) As Integer
+   
+    Dim cnt As ADODB.Connection
+    Dim qry As ADODB.Recordset 'tb
+    Dim rst As ADODB.Recordset
+    Dim key As Variant
+    Dim strKey As String
+    
+    Dim mySQL As String
+    Dim myQueryExist As String
+
+    Set cnt = New ADODB.Connection
+    Set rst = New ADODB.Recordset
+    Set qry = New ADODB.Recordset
+    
+    '------------ Filter rows here ------------
+    myQueryExist = "SELECT * FROM [sptb] WHERE [" + colTitle + "] = '" + colVal + "';"
+    ''mySQL = "SELECT * FROM [sptb]"
+    
+    On Error GoTo ErrPrint
+    With cnt
+        .ConnectionString = _
+        "Provider=Microsoft.ACE.OLEDB.12.0;WSS;IMEX=0;RetrieveIds=Yes;DATABASE=" + strSPServer + ";LIST=" + strListGUID + ";"
+        .Open
+    End With
+    
+    'For Each key In rowDictionary.Keys
+    '    Debug.Print key, rowDictionary(key)
+    'Next key
+    
+    'On Error GoTo 0
+    qry.Open myQueryExist, cnt, adOpenDynamic, adLockOptimistic
+    If qry.EOF Then ' Add new record only if not exist
+        qry.AddNew
+        
+        '---- loop through columns to populate the record
+        For Each key In rowDictionary.Keys
+            Debug.Print key, rowDictionary(key)
+            strKey = key ' Required as qry Fields do not accept Variant
+            qry.Fields(strKey) = rowDictionary(key)
+        Next key
+        '------------------------------------------------
+        
+        qry.Update ' commit changes to SP list
+    
+        AddToSharepoint = 0
+    Else
+        AddToSharepoint = 1
+    End If
+
+    
+    If CBool(qry.State And adStateOpen) = True Then qry.Close
+    Set qry = Nothing
+    
+    If CBool(cnt.State And adStateOpen) = True Then cnt.Close
+    Set cnt = Nothing
+    'MsgBox "Complete!"
+    
+    Exit Function
+    
+ErrPrint:
+    Debug.Print Err.Number & Err.Description + " " + colTitle + "=" + colVal + " Error-Check the value!"
+    AddToSharepoint = 1
+End Function
