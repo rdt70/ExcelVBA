@@ -1,4 +1,7 @@
 'obtain the last file on a sharepoint document list
+'strSPServer = sharepoint server
+'strListGUID = sharepoint list guid
+'strPath = path to look into on the document library
 Function getLastFile(strSP As String, listGUID As String, strPath As String) As String
     
     Dim cnt As ADODB.Connection
