@@ -1,9 +1,9 @@
-
+'rowDictionary = disctionary list of values to be updated
 '*************************************************
 '^^^^^^^ Add a new record to sharepoint list
 '*************************************************
-Function AddToSharepoint(colTitle As String, colVal As String, Optional ByRef rowDictionary As Object) As Integer
-   
+Function AddToSharepoint(idxName As String, idxValue As String, Optional ByRef rowDictionary As Object) As Integer
+
     Dim cnt As ADODB.Connection
     Dim qry As ADODB.Recordset 'tb
     Dim rst As ADODB.Recordset
@@ -17,8 +17,9 @@ Function AddToSharepoint(colTitle As String, colVal As String, Optional ByRef ro
     Set rst = New ADODB.Recordset
     Set qry = New ADODB.Recordset
     
+    AddToSharepoint = 1
     '------------ Filter rows here ------------
-    myQueryExist = "SELECT * FROM [sptb] WHERE [" + colTitle + "] = '" + colVal + "';"
+    myQueryExist = "SELECT * FROM [sptb] WHERE [" + idxName + "] = '" + idxValue + "';"
     ''mySQL = "SELECT * FROM [sptb]"
     
     On Error GoTo ErrPrint
@@ -44,10 +45,10 @@ Function AddToSharepoint(colTitle As String, colVal As String, Optional ByRef ro
             qry.Fields(strKey) = rowDictionary(key)
         Next key
         '------------------------------------------------
-        
-        qry.Update ' commit changes to SP list
-    
-        AddToSharepoint = 0
+        'If qry.Fields("Country") > "" Then  ' Conditional upda only if a field is populated
+            qry.Update ' commit changes to SP list
+            AddToSharepoint = 0
+        'End If
     Else
         AddToSharepoint = 1
     End If
