@@ -1,0 +1,58 @@
+'update a specifig field on a sharepoint list
+'idxName = field used as index/key e.g. "Name"
+'idxValue = value to search for
+'colTitle = field to update
+'colValue = field value
+'strSPServer = sharepoint server
+'strListGUID = sharepoint list guid
+Function UpdateSharepoint(idxName As String, idxValue As String, colTitle As String, colVal As String) As Integer
+    '-----------------------------
+    'Download free codes from http://vbaa2z.blogspot.com
+    'Author: L Pamai (vbaa2z.team@gmail.com)
+    '-----------------------------
+    
+    Dim cnt As ADODB.Connection
+    Dim rst As ADODB.Recordset 'tb
+    
+    Dim mySQL As String
+
+    
+    Set cnt = New ADODB.Connection
+    Set rst = New ADODB.Recordset
+
+    
+    '------------ Filter rows here ------------
+    mySQL = "SELECT * FROM [sptb] WHERE [" + idxName + "] = '" + idxValue + "';"
+    
+    On Error GoTo ErrPrint
+    With cnt
+        .ConnectionString = _
+        "Provider=Microsoft.ACE.OLEDB.12.0;WSS;IMEX=0;RetrieveIds=Yes;DATABASE=" + strSPServer + ";LIST=" + strListGUID + ";"
+        .Open
+    End With
+    
+    rst.Open mySQL, cnt, adOpenDynamic, adLockOptimistic
+    
+    On Error GoTo ErrPrint
+    '------------ Update specific cell here -----------
+    While Not rst.EOF
+        If IsNull(rst.Fields(colTitle)) Or (rst.Fields(colTitle) <> colVal) Then
+            rst.Fields(colTitle) = colVal
+            rst.Update
+        End If
+        rst.MoveNext
+    Wend
+    
+    If CBool(rst.State And adStateOpen) = True Then rst.Close
+    Set rst = Nothing
+    
+    If CBool(cnt.State And adStateOpen) = True Then cnt.Close
+    Set cnt = Nothing
+    'MsgBox "Complete!"
+    UpdateSharepoint = 0
+    Exit Function
+    
+ErrPrint:
+    Debug.Print Err.Number & Err.Description + " " + colTitle + "=" + colVal + " Error-Check the value!"
+    UpdateSharepoint = 1
+End Function
