@@ -1,0 +1,61 @@
+'obtain the last file on a sharepoint document list
+Function getLastFile(strSP As String, listGUID As String, strPath As String) As String
+    
+    Dim cnt As ADODB.Connection
+    Dim rst As ADODB.Recordset 'tb
+    Dim strCompare As Integer
+    Dim objFLD As Object
+    Dim Found As Boolean
+    
+    Dim mySQL As String
+
+    
+    Set cnt = New ADODB.Connection
+    Set rst = New ADODB.Recordset
+
+    
+    '------------ Filter rows here ------------
+    mySQL = "SELECT * FROM MyDocs ORDER BY Modified DESC ;" ' TOP 1
+    
+    On Error GoTo ErrPrint
+    With cnt
+        .ConnectionString = _
+        "Provider=Microsoft.ACE.OLEDB.12.0;WSS;IMEX=0;RetrieveIds=Yes;DATABASE=" + strSP + ";LIST=" + listGUID + ";"
+        .Open
+    End With
+    
+    rst.Open mySQL, cnt, adOpenDynamic, adLockReadOnly
+    
+    On Error GoTo ErrPrint
+    '------------ Update specific cell here -----------
+    'For Each objFLD In rst.Fields
+    '    Debug.Print " " & objFLD.Name
+    'Next
+    'ThisWorkbook.Worksheets("Test").Range("C2").CopyFromRecordset rst
+    
+    Found = False
+    While Not rst.EOF
+        'Debug.Print rst.Fields("Encoded Absolute URL")
+        strCompare = InStr(1, rst.Fields("Encoded Absolute URL"), Replace(strPath, " ", "%20"), vbTextCompare)
+        
+        If (strCompare > 0) And (rst.Fields("Content Type") <> "Folder") And Not (Found) Then
+
+            Found = True
+            getLastFile = rst.Fields("Encoded Absolute URL")
+        End If
+        rst.MoveNext
+    Wend
+   
+    
+    If CBool(rst.State And adStateOpen) = True Then rst.Close
+    Set rst = Nothing
+    
+    If CBool(cnt.State And adStateOpen) = True Then cnt.Close
+    Set cnt = Nothing
+    
+    Exit Function
+    
+ErrPrint:
+    Debug.Print Err.Number & Err.Description
+
+End Function
